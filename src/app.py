@@ -49,7 +49,11 @@ with col1:
         ndvi_img = ndvi_to_colormap_image(ndvi)
 
         st.subheader("🌍 NDVI Map")
-        st.image(ndvi_img, use_container_width=True)
+        try:
+            st.image(ndvi_img, use_container_width=True)
+        except TypeError:
+            st.image(ndvi_img, use_column_width=True)
+
 
         ndvi_mean = float(np.nanmean(ndvi))
         st.metric("Mean NDVI", f"{ndvi_mean:.3f}")
@@ -95,8 +99,10 @@ if "ndvi" in locals():
     overlay = overlay_mask_on_rgb(red, green, nir, mask, alpha=0.4)
 
     st.subheader("🚨 Stressed Zones (Overlay)")
-    st.image(overlay, use_container_width=True)
-
+    try:
+        st.image(overlay, use_container_width=True)
+    except TypeError:
+        st.image(overlay, use_column_width=True)
     # Defaults
     alert, score = False, 0.0
     ndvi_mean = float(np.nanmean(ndvi))
