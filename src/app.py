@@ -1,13 +1,15 @@
 # app.py
 import streamlit as st
+import numpy as np
+import pandas as pd
+from PIL import Image
+from io import BytesIO
+import os
+import tempfile
 from utils import (
     load_npz_image, compute_ndvi, ndvi_to_colormap_image,
     overlay_mask_on_rgb, read_sensor_csv, simple_fusion_alert
 )
-import numpy as np
-import pandas as pd
-from io import BytesIO
-import os, tempfile
 
 # ----------------- PAGE SETUP -----------------
 st.set_page_config(layout="wide", page_title="Precision Agri Demo")
@@ -26,17 +28,20 @@ with col1:
 
     if uploaded_image is None:
         if st.button("Use sample tile"):
-            uploaded_image = open("sample_data/sample_tile.npz", "rb")
+            # --- CORRECTED PATH LOGIC ---
+            script_dir = os.path.dirname(__file__)
+            sample_image_path = os.path.join(script_dir, "..", "sample_data", "sample_tile.npz")
+            uploaded_image = open(sample_image_path, "rb")
+            # --------------------------
 
     if uploaded_image is not None:
-        # Handle file safely
+        # Handle uploaded file safely
         if hasattr(uploaded_image, "read"):
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".npz")
-            tmp.write(uploaded_image.read())
-            tmp.flush()
-            tmp.close()
-            imgdata = load_npz_image(tmp.name)
-            os.unlink(tmp.name)
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".npz") as tmp:
+                tmp.write(uploaded_image.read())
+                tmp_path = tmp.name
+            imgdata = load_npz_image(tmp_path)
+            os.unlink(tmp_path)
         else:
             imgdata = load_npz_image(uploaded_image)
 
@@ -49,11 +54,7 @@ with col1:
         ndvi_img = ndvi_to_colormap_image(ndvi)
 
         st.subheader("🌍 NDVI Map")
-        try:
-            st.image(ndvi_img, use_container_width=True)
-        except TypeError:
-            st.image(ndvi_img, use_column_width=True)
-
+        st.image(ndvi_img, use_column_width=True)
 
         ndvi_mean = float(np.nanmean(ndvi))
         st.metric("Mean NDVI", f"{ndvi_mean:.3f}")
@@ -67,16 +68,16 @@ with col2:
 
     if uploaded_csv is None:
         if st.button("Use sample sensors"):
-            uploaded_csv = open("sample_data/sensors.csv", "rb")
-
+            # --- CORRECTED PATH LOGIC ---
+            script_dir = os.path.dirname(__file__)
+            sample_csv_path = os.path.join(script_dir, "..", "sample_data", "sensors.csv")
+            uploaded_csv = open(sample_csv_path, "rb")
+            # --------------------------
+            
     df = None
     if uploaded_csv is not None:
         try:
-            if hasattr(uploaded_csv, "read"):
-                df = pd.read_csv(uploaded_csv, parse_dates=["timestamp"])
-            else:
-                df = read_sensor_csv(uploaded_csv)
-
+            df = pd.read_csv(uploaded_csv, parse_dates=["timestamp"])
             st.subheader("📊 Sensor Data Preview")
             st.dataframe(df.tail())
 
@@ -99,10 +100,8 @@ if "ndvi" in locals():
     overlay = overlay_mask_on_rgb(red, green, nir, mask, alpha=0.4)
 
     st.subheader("🚨 Stressed Zones (Overlay)")
-    try:
-        st.image(overlay, use_container_width=True)
-    except TypeError:
-        st.image(overlay, use_column_width=True)
+    st.image(overlay, use_column_width=True)
+    
     # Defaults
     alert, score = False, 0.0
     ndvi_mean = float(np.nanmean(ndvi))
