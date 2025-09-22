@@ -1,4 +1,5 @@
 # app.py
+
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -8,7 +9,8 @@ import os
 import tempfile
 from utils import (
     load_npz_image, compute_ndvi, ndvi_to_colormap_image,
-    overlay_mask_on_rgb, read_sensor_csv, simple_fusion_alert
+    overlay_mask_on_rgb, read_sensor_csv, simple_fusion_alert,
+    get_ai_advice
 )
 
 # ----------------- PAGE SETUP -----------------

@@ -101,3 +101,41 @@ def simple_fusion_alert(ndvi_mean, soil_moisture_mean, ndvi_thresh=0.3, soil_thr
 def compute_ndmi(nir, swir, eps=1e-8):
     ndmi = (nir - swir) / (nir + swir + eps)
     return np.clip(ndmi, -1, 1)
+
+
+# utils.py
+
+# ... (add this function to the end of your existing file) ...
+
+def get_ai_advice(alert, ndvi_mean, soil_mean, ndvi_thresh, soil_thresh):
+    """
+    Provides a diagnosis and recommendation based on sensor and NDVI data.
+    """
+    if alert:
+        return {
+            "priority": "High",
+            "color": "error",
+            "diagnosis": "Critical Stress Detected",
+            "recommendation": "Immediate action required. Both vegetation health and soil moisture are below critical thresholds. Visually inspect the stressed zones and check irrigation systems immediately."
+        }
+    elif ndvi_mean < ndvi_thresh:
+        return {
+            "priority": "Medium",
+            "color": "warning",
+            "diagnosis": "Vegetation Stress Detected (Soil Moisture OK)",
+            "recommendation": "The issue may not be water-related. Investigate the flagged areas for pests, disease, or potential nutrient deficiencies."
+        }
+    elif soil_mean < soil_thresh:
+        return {
+            "priority": "Medium",
+            "color": "warning",
+            "diagnosis": "Low Soil Moisture Detected (Vegetation Still Healthy)",
+            "recommendation": "This is a pre-stress warning. Vegetation is currently stable, but drought stress is imminent. Proactively schedule irrigation."
+        }
+    else:
+        return {
+            "priority": "Low",
+            "color": "success",
+            "diagnosis": "Conditions Appear Normal",
+            "recommendation": "Crop health is stable and soil moisture is adequate. Continue standard monitoring practices."
+        }
